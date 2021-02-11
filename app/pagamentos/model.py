@@ -17,4 +17,10 @@ class Pagamentos(db.Model):
     vencimento_cartao = db.Column(db.String(5), nullable=False) # formato xx/xx mês/ano
     cvv = db.Column(db.String(3), nullable=False)
 
+    def json(self):
+        return{
+            "Nome":self.nome_completo,
+            "numero":self.numero_cartao
+        }
+
     # Adicionar mais informações do cartao

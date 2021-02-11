@@ -21,7 +21,7 @@ methods=['POST']
 usuario_api.add_url_rule(
 '/pagamento/<int:id>', 
 view_func=UsuarioPagamento.as_view('pagamento_usuario'),
-methods=['POST']
+methods=['POST','DELETE']
 )
 
 # Atualizar dados

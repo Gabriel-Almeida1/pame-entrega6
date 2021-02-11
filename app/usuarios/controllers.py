@@ -127,7 +127,26 @@ class UsuarioPagamento(MethodView): # /pagamento/<int:id> , precisa de token
 
         return user.json(), 200     
 
-# Adicionar funcionalidade para deletar cartao
+    def delete(self, id): # Recebe "numero_cartao"
+        if get_jwt_identity() != id:
+            return{"Erro":"Usuário não autorizado"}, 400
+        user = Usuarios.query.get_or_404(id)
+        dados = request.json
+
+        numero_cartao = dados.get('numero_cartao')
+
+        if numero_cartao == '' or numero_cartao == None or not isinstance(numero_cartao,str):
+            return{"Erro":"Número do cartão inválido (deve ser tipo string)"}, 400
+
+        cartao = Pagamentos.query.filter_by(numero_cartao=numero_cartao, owner_id=user.id).first()
+
+        if not cartao:
+            return{"Erro","Cartão não encontrado"}, 400
+
+        db.session.delete(cartao)
+        db.session.commit()
+
+        return {"msg":"Cartão apagado com sucesso"}, 200
 
 
 class DadosUsuario(MethodView): # /atualizar-dados/<int:id> , precisa de token
