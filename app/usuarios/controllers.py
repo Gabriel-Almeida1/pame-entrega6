@@ -269,10 +269,17 @@ class SearchBar(MethodView): # /procurar
 
         procura = dados.get('procura')
 
-        if procura == None or not isinstance(procura, str):
+        if procura == '' or procura == None or not isinstance(procura, str):
             return{"Erro":"Input Inválido"}, 400
 
-        item = Produtos.query.filter_by(nome=procura).first() # Como só é permitido cadastrar 1 nome pra cada produto, nunca haverá mais de um produto achado na busca.
-        if not item:
+        aux = procura
+        itens = []
+        for count in range(1,len(procura)+1,1):
+            item = Produtos.query.filter_by(nome=aux[0:count]).first() # Como só é permitido cadastrar 1 nome pra cada produto, nunca haverá mais de um produto achado na busca.
+            if item:
+                itens.append(item.json())
+
+        if not itens:
             return {"Resultado":"Nada encontrado"}, 200
-        return item.json(), 200
+
+        return jsonify(itens), 200
