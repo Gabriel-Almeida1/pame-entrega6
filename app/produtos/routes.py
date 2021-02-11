@@ -1,5 +1,5 @@
 from flask import Blueprint
-from .controllers import (ListaProdutos, RegistrarProduto, EstoqueProduto, PrecoProduto)
+from .controllers import (ListaProdutos, DeletarProduto, RegistrarProduto, EstoqueProduto, PrecoProduto)
 
 produtos_api = Blueprint('produtos_api', __name__)
 
@@ -15,6 +15,13 @@ produtos_api.add_url_rule(
 '/produtos/registrar',
 view_func=RegistrarProduto.as_view('registrar_produtos'),
 methods=['POST']
+)
+
+# Excluir Produtos
+produtos_api.add_url_rule(
+'/produtos/excluir',
+view_func=DeletarProduto.as_view('deletar_produtos'),
+methods=['DELETE']
 )
 
 # Verificar Estoque

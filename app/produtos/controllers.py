@@ -11,6 +11,10 @@ class ListaProdutos(MethodView): # /produtos/
 
 
 class RegistrarProduto(MethodView): # /produtos/registrar
+
+    # A ideia é que está função fosse ser utilizada somente pelo administrador da página, então ela deveria ter algum
+    # tipo de autenticação por token com o id desse administrador, mas como isso atrapalharia muito na hora de testar, não coloquei.
+
     def post(self): # Vai ser passado "nome", "estoque" e "preco" do produto
         dados = request.json
 
@@ -36,6 +40,29 @@ class RegistrarProduto(MethodView): # /produtos/registrar
         db.session.commit()
 
         return produto.json(), 200
+
+class DeletarProduto(MethodView): # /produtos/excluir
+
+    # Assim como registrar, a ideia é que está função fosse ser utilizada somente pelo administrador da página,
+    # mas pelo mesmo motivo não foi colocado.
+
+    def delete(self): # recebe "nome"
+        dados = request.json
+
+        nome_produto = dados.get('nome')
+
+        if nome_produto == '' or nome_produto == None or not isinstance(nome_produto,str):
+            return{"Erro":"Nome inválido (deve ser tipo string)"}, 400
+
+        produto = Produtos.query.filter_by(nome=nome_produto).first()
+
+        if not produto:
+            return{"Erro":"Produto não cadastrado ou já excluído."}, 400
+
+        db.session.delete(produto)
+        db.session.commit()
+
+        return {"mensagem":"Produto excluído do sistema."}, 200
 
 
 class EstoqueProduto(MethodView): # /produtos/estoque
