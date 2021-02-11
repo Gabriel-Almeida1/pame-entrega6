@@ -8,6 +8,7 @@ from .pagamentos.model import Pagamentos
 from .carrinhos.model import Carrinhos
 from .produtos.model import Produtos
 from .mensagens.model import Mensagens
+from .itens_carrinho.model import ItensCarrinho
 
 from .usuarios.routes import usuario_api
 from .produtos.routes import produtos_api

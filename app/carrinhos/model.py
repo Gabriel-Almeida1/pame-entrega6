@@ -1,6 +1,6 @@
 from ..extensions import db
-from ..association import association_table
 from flask import jsonify
+from ..itens_carrinho.model import ItensCarrinho
 
 class Carrinhos(db.Model):
     __tablename__ = 'carrinhos'
@@ -8,9 +8,8 @@ class Carrinhos(db.Model):
 
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), unique=True) # One (usuario) to One (carrinho)
 
-    produtos = db.relationship('Produtos', secondary=association_table, backref='carrinho') # Many(carrinho) to Many(produtos)
-
-    def json(self):
-        return jsonify([produto.json() for produto in self.produtos])
-
+    itens = db.relationship('ItensCarrinho', backref='carrinho')
+    #produtos = db.relationship('Produtos', secondary=association_table, backref='carrinho') # Many(carrinho) to Many(produtos)
     
+    def json(self):
+        return jsonify([item.json() for item in self.itens])

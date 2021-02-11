@@ -5,15 +5,16 @@ from ..extensions import db
 from .model import Carrinhos
 from ..produtos.model import Produtos
 from ..usuarios.model import Usuarios
+from ..itens_carrinho.model import ItensCarrinho
 
 class UsuarioCarrinho(MethodView): # /carrinho/<int:id>
     def get(self, id):
         user = Usuarios.query.get_or_404(id)
         dados = request.json
         if not user.carrinho:
-            return{"Erro":"Carrinho Vazio"}, 400
+            return{"Mensagem":"Carrinho Vazio"}, 200
 
-        return jsonify([produto.nome for produto in user.carrinho.produtos])
+        return jsonify([item.json() for item in user.carrinho.itens]),200
 
     def post(self, id): # recebe "produto"
         # Vai receber o produto a ser adicionado
@@ -30,13 +31,28 @@ class UsuarioCarrinho(MethodView): # /carrinho/<int:id>
             return{"Erro": "Produto não cadastrado"}, 400
 
         if user.carrinho:
-            carrinho = user.carrinho
-            carrinho.produtos.append(produto)
+            print("if")
+            carrinho = user.carrinho 
+            achou = False
+
+            for count in range (0,len(carrinho.itens),1):
+                if carrinho.itens[count].nome_produto == produto.nome:
+                    carrinho.itens[count].unidades += 1
+                    achou = True
+                    break # dado que não existirão produtos repetidos nessa lista
+
+            if achou == False:
+                item = ItensCarrinho(nome_produto=nome_produto,preco=produto.preco, unidades=1, carrinho=carrinho)
+                db.session.add(item)
+
             db.session.commit()
+
         else:
+            print("else")
             carrinho = Carrinhos(usuario=user)
-            carrinho.produtos.append(produto)
+            item = ItensCarrinho(nome_produto=nome_produto,preco=produto.preco, unidades=1, carrinho=carrinho)
             db.session.add(carrinho)
+            db.session.add(item)
             db.session.commit()
 
         return carrinho.json(), 200
