@@ -1,5 +1,5 @@
 from flask import Blueprint
-from .controllers import (RegistrarUsuario, UsuarioLogin, UsuarioCartao, DadosUsuario, EsqueciSenha)
+from .controllers import (RegistrarUsuario, UsuarioLogin, UsuarioPagamento, DadosUsuario, EsqueciSenha)
 
 usuario_api = Blueprint('usuario_api', __name__)
 
@@ -17,10 +17,10 @@ view_func=UsuarioLogin.as_view('login_usuario'),
 methods=['POST']
 )
 
-# Cartao
+# Pagamento
 usuario_api.add_url_rule(
-'/pagamento', 
-view_func=UsuarioCartao.as_view('cartao_usuario'),
+'/pagamento/<int:id>', 
+view_func=UsuarioPagamento.as_view('pagamento_usuario'),
 methods=['POST']
 )
 

@@ -81,40 +81,50 @@ class UsuarioLogin(MethodView): # /login
         return {"token": token}, 200
 
 
-class UsuarioCartao(MethodView): # /pagamento , precisa de token
+class UsuarioPagamento(MethodView): # /pagamento/<int:id> , precisa de token
 
-    def post(self): # Adicionar Cartao: Recebe "nome", "senha", "numero_cartao" e "cvv"
+    decorators = [jwt_required]
+
+    def post(self, id): # Adicionar Cartao: Recebe "nome_completo", "cidade", "endereco", "numero_cartao", "vencimento" e "cvv"
+        if get_jwt_identity() != id:
+            return{"Erro":"Usuário não autorizado"}, 400
+        user = Usuarios.query.get_or_404(id)
         dados = request.json
 
-        nome = dados.get('nome')
-        senha = dados.get('senha')
+        nome_completo = dados.get('nome_completo')
+        cidade = dados.get('cidade')
+        endereco = dados.get('endereco')
+
         numero_cartao = dados.get('numero_cartao')
+        vencimento = dados.get('vencimento')
         cvv = dados.get('cvv')
 
-        if nome == '' or nome == None or not isinstance(nome,str):
-            return{"Erro":"Nome é obrigatório e deve ser tipo string"}, 400
+        if nome_completo == '' or nome_completo == None or not isinstance(nome_completo,str):
+            return{"Erro":"Nome Completo obrigatório e deve ser tipo string"}, 400
 
-        if senha == '' or senha == None or not isinstance(senha,str):
-            return{"Erro":"Senha obrigatória e deve ser tipo string"}, 400
+        if cidade == '' or cidade == None or not isinstance(cidade,str):
+            return{"Erro":"Cidade obrigatória e deve ser tipo string"}, 400
+
+        if endereco == '' or endereco == None or not isinstance(endereco,str):
+            return{"Erro":"Endereço obrigatório e deve ser tipo string"}, 400
 
         if numero_cartao == '' or numero_cartao == None or not isinstance(numero_cartao,str):
             return{"Erro":"Cartão é obrigatório e deve ser tipo string"}, 400
 
+        if vencimento == '' or vencimento == None or not isinstance(vencimento,str):
+            return{"Erro":"Vencimento do Cartão é obrigatório e deve ser tipo string"}, 400
+
         if cvv == '' or cvv == None or not isinstance(cvv,str):
             return{"Erro":"Cvv obrigatório e deve ser tipo string"}, 400
 
-        usuario = Usuarios.query.filter_by(nome=nome,senha=senha).first()
-        if not usuario:
-            return{"Erro": "Usuário não cadastrado ou usuário/senha incorreto(a)"},400
-        
-        if Pagamentos.query.filter_by(numero_cartao=numero_cartao, owner_id=usuario.id).first():
+        if Pagamentos.query.filter_by(numero_cartao=numero_cartao, owner_id=user.id).first():
             return{"Erro":"Cartão já cadastrado"},400
 
-        cartao = Pagamentos(numero_cartao=numero_cartao, cvv=cvv, owner=usuario)
+        cartao = Pagamentos(nome_completo=nome_completo, cidade=cidade, endereco=endereco, numero_cartao=numero_cartao, vencimento_cartao=vencimento, cvv=cvv, owner=user)
         db.session.add(cartao)
         db.session.commit()
 
-        return usuario.json(), 200     
+        return user.json(), 200     
 
 # Adicionar funcionalidade para atualizar dados do cartao
 
