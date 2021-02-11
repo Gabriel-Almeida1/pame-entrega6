@@ -1,5 +1,5 @@
 from flask import Blueprint
-from .controllers import (RegistrarUsuario, UsuarioLogin, UsuarioPagamento, DadosUsuario, EsqueciSenha)
+from .controllers import (RegistrarUsuario, UsuarioLogin, UsuarioPagamento, DadosUsuario, EsqueciSenha, SearchBar)
 
 usuario_api = Blueprint('usuario_api', __name__)
 
@@ -35,5 +35,12 @@ methods=['PUT','PATCH']
 usuario_api.add_url_rule(
 '/esqueci-a-senha', 
 view_func=EsqueciSenha.as_view('esqueci_senha'),
+methods=['POST']
+)
+
+# Barra de pesquuisa
+usuario_api.add_url_rule(
+'/procurar', 
+view_func=SearchBar.as_view('search_bar'),
 methods=['POST']
 )

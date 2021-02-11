@@ -1,4 +1,4 @@
-from flask import request, render_template
+from flask import request, render_template, jsonify
 from flask.views import MethodView
 from flask_mail import Message
 from flask_jwt_extended  import create_access_token, jwt_required, get_jwt_identity
@@ -6,6 +6,7 @@ import bcrypt
 from ..extensions import db, mail
 
 from .model import Usuarios
+from ..produtos.model import Produtos
 from ..pagamentos.model import Pagamentos
 
 class RegistrarUsuario(MethodView): # /registrar
@@ -126,7 +127,7 @@ class UsuarioPagamento(MethodView): # /pagamento/<int:id> , precisa de token
 
         return user.json(), 200     
 
-# Adicionar funcionalidade para atualizar dados do cartao
+# Adicionar funcionalidade para deletar cartao
 
 
 class DadosUsuario(MethodView): # /atualizar-dados/<int:id> , precisa de token
@@ -260,3 +261,18 @@ class EsqueciSenha(MethodView): # /esqueci-a-senha
         mail.send(msg)
 
         return user.json(), 200
+
+class SearchBar(MethodView): # /procurar
+
+    def post(self): # recebe "procura"
+        dados = request.json
+
+        procura = dados.get('procura')
+
+        if procura == None or not isinstance(procura, str):
+            return{"Erro":"Input Inválido"}, 400
+
+        item = Produtos.query.filter_by(nome=procura).first() # Como só é permitido cadastrar 1 nome pra cada produto, nunca haverá mais de um produto achado na busca.
+        if not item:
+            return {"Resultado":"Nada encontrado"}, 200
+        return item.json(), 200
