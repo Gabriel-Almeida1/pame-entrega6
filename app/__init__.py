@@ -11,7 +11,7 @@ from .mensagens.model import Mensagens
 
 from .usuarios.routes import usuario_api
 from .produtos.routes import produtos_api
-from .carrinhos.controllers import carrinhos_api
+from .carrinhos.routes import carrinhos_api
 from .mensagens.routes import mensagens_api
 
 def create_app():
