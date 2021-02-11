@@ -7,7 +7,7 @@ class Usuarios(db.Model):
     nome = db.Column(db.String(30), nullable=False)
     data_nasc = db.Column(db.String(10), nullable=False) # Formato padrão: xx/xx/xxxx
     cpf = db.Column(db.String(14), nullable=False, unique=True) # Formato com os pontos em hífen: 576.576.576-57
-    email = db.Column(db.String(100),unique=True)
+    email = db.Column(db.String(100), nullable=False, unique=True)
     senha_hash = db.Column(db.String(200), nullable=False)
 
     # Considerando que o cliente pode querer cadastrar múltiplas formas de pagamento
@@ -21,5 +21,6 @@ class Usuarios(db.Model):
         return{
             'nome': self.nome,
             'data_nasc': self.data_nasc,
-            'cpf': self.cpf
+            'cpf': self.cpf,
+            'email': self.email
         }

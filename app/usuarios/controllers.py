@@ -1,7 +1,7 @@
 from flask import request, render_template
 from flask.views import MethodView
 from flask_mail import Message
-from flask_jwt_extended  import create_access_token
+from flask_jwt_extended  import create_access_token, jwt_required, get_jwt_identity
 import bcrypt
 from ..extensions import db, mail
 
@@ -81,7 +81,7 @@ class UsuarioLogin(MethodView): # /login
         return {"token": token}, 200
 
 
-class UsuarioCartao(MethodView): # /cartao
+class UsuarioCartao(MethodView): # /cartao , precisa de token
 
     def post(self): # Adicionar Cartao: Recebe "nome", "senha", "numero_cartao" e "cvv"
         dados = request.json
@@ -119,22 +119,37 @@ class UsuarioCartao(MethodView): # /cartao
 # Adicionar funcionalidade para atualizar dados do cartao
 
 
-class DadosUsuario(MethodView): # /atualizar-dados/<int:id>
+class DadosUsuario(MethodView): # /atualizar-dados/<int:id> , precisa de token
 
-    def put(self, id): # recebe "nome", "senha", "cpf" e "data_nasc"
+    decorators = [jwt_required] # token, conferir se o usuario esta logado
+
+    def put(self, id): # recebe "nome", "senha_atual", "senha_nova", "cpf", "email" e "data_nasc"
+        if get_jwt_identity() != id:
+            return{"Erro":"Usuário não autorizado"}, 400
         user = Usuarios.query.get_or_404(id)
         dados = request.json
 
         nome = dados.get('nome')
         cpf = dados.get('cpf')
+        email = dados.get('email')
         data_nasc = dados.get('data_nasc')
-        senha = dados.get('senha')
+        senha_atual = dados.get('senha_atual')
+        senha_nova = dados.get('senha_nova')
 
         if nome == '' or nome == None or not isinstance(nome, str):
-            return{"Erro":"Nome Invalido"}, 400
+            return{"Erro":"Nome Inválido"}, 400
 
-        if senha == '' or senha == None or not isinstance(senha, str):
-            return{"Erro":"Senha Inválida"}, 400
+        if email == '' or email == None or not isinstance(email, str):
+            return{"Erro":"e-mail Inválido"}, 400
+
+        if email != user.email and Usuarios.query.filter_by(email=email).first():
+            return{"Erro":"e-mail já cadastrado em outra conta"}, 400
+
+        if senha_atual == '' or senha_atual == None or not isinstance(senha_atual, str) or not bcrypt.checkpw(senha_atual.encode(), user.senha_hash):
+            return{"Erro":"Senha atual Inválida"}, 400
+
+        if senha_nova == '' or senha_nova == None or not isinstance(senha_nova, str):
+            return{"Erro":"Nova senha Inválida"}, 400
 
         if cpf == '' or cpf == None or not isinstance(cpf, str):
             return{"Erro":"CPF Inválido (formato: xxx.xxx.xxx-xx)"}, 400
@@ -145,33 +160,56 @@ class DadosUsuario(MethodView): # /atualizar-dados/<int:id>
         if data_nasc == '' or data_nasc == None or not isinstance(data_nasc, str):
             return{"Erro":"Data de Nascimento Inválida"}, 400
 
-        user.nome = nome
-        user.senha = senha 
+        user.nome = nome 
         user.cpf = cpf
+        user.email = email
         user.data_nasc = data_nasc
+        user.senha_hash = bcrypt.hashpw(senha_nova.encode(), bcrypt.gensalt())
 
         db.session.commit()
 
         return user.json(), 200
 
     def patch(self, id):
+        if get_jwt_identity() != id:
+            return{"Erro":"Usuário não autorizado"}, 400
         user = Usuarios.query.get_or_404(id)
         dados = request.json
 
         nome = dados.get('nome', user.nome)
         cpf = dados.get('cpf', user.cpf)
         data_nasc = dados.get('data_nasc', user.data_nasc)
-        senha = dados.get('senha', user.senha)
+        senha_atual = dados.get('senha_atual', user.senha_hash)
+        email = dados.get('email', user.email)
+        senha_nova = dados.get('senha_nova', False)
 
         if nome == '' or not isinstance(nome, str):
-            return{"Erro":"Nome Invalido"}, 400
+            return{"Erro":"Nome Inválido"}, 400
 
-        if senha == '' or not isinstance(senha, str):
-            return{"Erro":"Senha Inválida"}, 400
+        if email == '' or not isinstance(email, str):
+            return{"Erro":"e-mail Inválido"}, 400
+
+        if email != user.email and Usuarios.query.filter_by(email=email).first():
+            return{"Erro":"e-mail já cadastrado em outra conta"}, 400
+
+        if senha_atual == '' or (not isinstance(senha_atual, str) and senha_atual != user.senha_hash): 
+            return{"Erro":"Senha atual Inválida"}, 400
+
+        if senha_atual != user.senha_hash:
+            if senha_nova == False:
+                return{"Erro":"É preciso passar a nova senha para alterar sua senha atual"}, 400
+            if not bcrypt.checkpw(senha_atual.encode(), user.senha_hash):
+                return{"Erro":"Senha atual incorreta"}, 400
+        
+        if senha_nova == '' or (not isinstance(senha_nova, str) and senha_nova != False):
+            return{"Erro":"Nova senha Inválida"}, 400
+
+        if senha_nova != False and senha_atual == user.senha_hash:
+            return{"Erro":"É preciso passar a senha atual para modificá-la"}, 400
 
         if cpf == '' or not isinstance(cpf, str):
             return{"Erro":"CPF Inválido (formato: xxx.xxx.xxx-xx)"}, 400
-        
+
         if cpf != user.cpf and Usuarios.query.filter_by(cpf=cpf).first():
             return{"Erro":"CPF já cadastrado em outra conta"}, 400
 
@@ -179,10 +217,14 @@ class DadosUsuario(MethodView): # /atualizar-dados/<int:id>
             return{"Erro":"Data de Nascimento Inválida"}, 400
 
         user.nome = nome
-        user.senha = senha 
         user.cpf = cpf
         user.data_nasc = data_nasc
-
+        user.email = email
+        
+        if senha_atual != user.senha_hash:
+            user.senha_hash = bcrypt.hashpw(senha_nova.encode(), bcrypt.gensalt())
         db.session.commit()
 
         return user.json(), 200
+
+# Fazer Esqueci senha
