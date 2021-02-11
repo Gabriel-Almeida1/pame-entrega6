@@ -81,7 +81,7 @@ class UsuarioLogin(MethodView): # /login
         return {"token": token}, 200
 
 
-class UsuarioCartao(MethodView): # /cartao , precisa de token
+class UsuarioCartao(MethodView): # /pagamento , precisa de token
 
     def post(self): # Adicionar Cartao: Recebe "nome", "senha", "numero_cartao" e "cvv"
         dados = request.json
@@ -227,4 +227,26 @@ class DadosUsuario(MethodView): # /atualizar-dados/<int:id> , precisa de token
 
         return user.json(), 200
 
-# Fazer Esqueci senha
+class EsqueciSenha(MethodView): # /esqueci-a-senha
+
+    def post(self):
+        dados = request.json
+
+        email = dados.get('email')
+
+        if email == '' or email == None or not isinstance(email, str):
+            return{"Erro":"e-mail Inválido"}, 400
+
+        user = Usuarios.query.filter_by(email=email).first()
+
+        if not user:
+            return{"Erro":"e-mail não cadastrado"}, 400
+
+        msg = Message(sender='gabriel.avila@poli.ufrj.br',
+                      recipients=[email],
+                      subject='Redefinir Senha',
+                      html=render_template('redefinir-senha.html',nome=user.nome)
+        )
+        mail.send(msg)
+
+        return user.json(), 200

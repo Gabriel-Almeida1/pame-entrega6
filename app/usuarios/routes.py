@@ -1,5 +1,5 @@
 from flask import Blueprint
-from .controllers import (RegistrarUsuario, UsuarioLogin, UsuarioCartao, DadosUsuario)
+from .controllers import (RegistrarUsuario, UsuarioLogin, UsuarioCartao, DadosUsuario, EsqueciSenha)
 
 usuario_api = Blueprint('usuario_api', __name__)
 
@@ -19,7 +19,7 @@ methods=['POST']
 
 # Cartao
 usuario_api.add_url_rule(
-'/cartao', 
+'/pagamento', 
 view_func=UsuarioCartao.as_view('cartao_usuario'),
 methods=['POST']
 )
@@ -29,4 +29,11 @@ usuario_api.add_url_rule(
 '/atualizar-dados/<int:id>', 
 view_func=DadosUsuario.as_view('atualizar_dados'),
 methods=['PUT','PATCH']
+)
+
+# Esqueci minha Senha
+usuario_api.add_url_rule(
+'/esqueci-a-senha', 
+view_func=EsqueciSenha.as_view('esqueci_senha'),
+methods=['POST']
 )
