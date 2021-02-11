@@ -9,3 +9,5 @@ class Pagamentos(db.Model):
 
     numero_cartao = db.Column(db.String(16)) # Não foi colocado o unique=True pensando que podem haver mais de um usuário com o mesmo cartão (exemplo: pai e filho tem o mesmo cartao)
     cvv = db.Column(db.String(3))
+
+    # Adicionar mais informações do cartao
