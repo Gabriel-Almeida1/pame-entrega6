@@ -40,6 +40,8 @@ class UsuarioCarrinho(MethodView): # /carrinho/<int:id>
             db.session.commit()
 
         return carrinho.json(), 200
+
+
 '''
     if request.method == 'DELETE':
          Vai esvaziar o carrinho.
