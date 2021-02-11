@@ -12,7 +12,7 @@ from .mensagens.model import Mensagens
 from .usuarios.routes import usuario_api
 from .produtos.routes import produtos_api
 from .carrinhos.controllers import carrinhos_api
-from .mensagens.controllers import mensagens_api
+from .mensagens.routes import mensagens_api
 
 def create_app():
     app = Flask(__name__)
