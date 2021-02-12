@@ -97,3 +97,25 @@ class PrecoProduto(MethodView): # /produtos/preco
             return{"Erro":"Produto não cadastrado"}, 400
         
         return jsonify(produto.preco), 200
+
+class SearchBar(MethodView): # /procurar
+
+    def post(self): # recebe "procura"
+        dados = request.json
+
+        procura = dados.get('procura')
+
+        if procura == '' or procura == None or not isinstance(procura, str):
+            return{"Erro":"Input Inválido"}, 400
+
+        aux = procura
+        itens = []
+        for count in range(1,len(procura)+1,1):
+            item = Produtos.query.filter_by(nome=aux[0:count]).first() # Como só é permitido cadastrar 1 nome pra cada produto, nunca haverá mais de um produto achado na busca.
+            if item:
+                itens.append(item.json())
+
+        if not itens:
+            return {"Resultado":"Nada encontrado"}, 200
+
+        return jsonify(itens), 200

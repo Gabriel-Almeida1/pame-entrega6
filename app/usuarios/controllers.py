@@ -6,7 +6,6 @@ import bcrypt
 from ..extensions import db, mail
 
 from .model import Usuarios
-from ..produtos.model import Produtos
 from ..pagamentos.model import Pagamentos
 
 class RegistrarUsuario(MethodView): # /registrar
@@ -112,11 +111,20 @@ class UsuarioPagamento(MethodView): # /pagamento/<int:id> , precisa de token
         if numero_cartao == '' or numero_cartao == None or not isinstance(numero_cartao,str):
             return{"Erro":"Cartão é obrigatório e deve ser tipo string"}, 400
 
+        if len(numero_cartao) != 16:
+            return{"Erro":"Número de Cartão Inválido (são 16 caracteres)"}, 400
+
         if vencimento == '' or vencimento == None or not isinstance(vencimento,str):
             return{"Erro":"Vencimento do Cartão é obrigatório e deve ser tipo string"}, 400
 
+        if len(vencimento) != 5:
+            return{"Erro":"Data de Vencimento Inválida (formato: XX/XX , mês/ano)"}, 400
+
         if cvv == '' or cvv == None or not isinstance(cvv,str):
             return{"Erro":"Cvv obrigatório e deve ser tipo string"}, 400
+
+        if len(cvv) != 3:
+            return{"Erro":"Código de Segurança(cvv) Inválido (são 3 caracteres)"}, 400
 
         if Pagamentos.query.filter_by(numero_cartao=numero_cartao, owner_id=user.id).first():
             return{"Erro":"Cartão já cadastrado"},400
@@ -141,12 +149,12 @@ class UsuarioPagamento(MethodView): # /pagamento/<int:id> , precisa de token
         cartao = Pagamentos.query.filter_by(numero_cartao=numero_cartao, owner_id=user.id).first()
 
         if not cartao:
-            return{"Erro","Cartão não encontrado"}, 400
+            return{"Erro":"Cartão não encontrado"}, 400
 
         db.session.delete(cartao)
         db.session.commit()
 
-        return {"msg":"Cartão apagado com sucesso"}, 200
+        return {"Mensagem":"Cartão apagado com sucesso"}, 200
 
 
 class DadosUsuario(MethodView): # /atualizar-dados/<int:id> , precisa de token
@@ -259,7 +267,7 @@ class DadosUsuario(MethodView): # /atualizar-dados/<int:id> , precisa de token
 
 class EsqueciSenha(MethodView): # /esqueci-a-senha
 
-    def post(self):
+    def post(self): # recebe "email"
         dados = request.json
 
         email = dados.get('email')
@@ -280,25 +288,3 @@ class EsqueciSenha(MethodView): # /esqueci-a-senha
         mail.send(msg)
 
         return user.json(), 200
-
-class SearchBar(MethodView): # /procurar
-
-    def post(self): # recebe "procura"
-        dados = request.json
-
-        procura = dados.get('procura')
-
-        if procura == '' or procura == None or not isinstance(procura, str):
-            return{"Erro":"Input Inválido"}, 400
-
-        aux = procura
-        itens = []
-        for count in range(1,len(procura)+1,1):
-            item = Produtos.query.filter_by(nome=aux[0:count]).first() # Como só é permitido cadastrar 1 nome pra cada produto, nunca haverá mais de um produto achado na busca.
-            if item:
-                itens.append(item.json())
-
-        if not itens:
-            return {"Resultado":"Nada encontrado"}, 200
-
-        return jsonify(itens), 200

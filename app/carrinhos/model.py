@@ -9,7 +9,6 @@ class Carrinhos(db.Model):
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), unique=True) # One (usuario) to One (carrinho)
 
     itens = db.relationship('ItensCarrinho', backref='carrinho')
-    #produtos = db.relationship('Produtos', secondary=association_table, backref='carrinho') # Many(carrinho) to Many(produtos)
     
     def json(self):
         return jsonify([item.json() for item in self.itens])

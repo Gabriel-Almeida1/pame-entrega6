@@ -1,5 +1,6 @@
 from flask import request, jsonify
 from flask.views import MethodView
+from flask_jwt_extended  import jwt_required, get_jwt_identity
 from ..extensions import db
 
 from .model import Carrinhos
@@ -8,7 +9,12 @@ from ..usuarios.model import Usuarios
 from ..itens_carrinho.model import ItensCarrinho
 
 class UsuarioCarrinho(MethodView): # /carrinho/<int:id>
+
+    decorators = [jwt_required]
+
     def get(self, id):
+        if get_jwt_identity() != id:
+            return{"Erro":"Usuário não autorizado"}, 400
         user = Usuarios.query.get_or_404(id)
 
         if not user.carrinho or not user.carrinho.itens:
@@ -18,6 +24,8 @@ class UsuarioCarrinho(MethodView): # /carrinho/<int:id>
 
     def post(self, id): # recebe "produto"
         # Vai receber o produto a ser adicionado
+        if get_jwt_identity() != id:
+            return{"Erro":"Usuário não autorizado"}, 400
         user = Usuarios.query.get_or_404(id)
         dados = request.json
 
@@ -56,6 +64,8 @@ class UsuarioCarrinho(MethodView): # /carrinho/<int:id>
 
     def delete(self, id): # recebe "produto"
         # Vai deletar 1 unidade por vez
+        if get_jwt_identity() != id:
+            return{"Erro":"Usuário não autorizado"}, 400
         user = Usuarios.query.get_or_404(id)
         dados = request.json
 

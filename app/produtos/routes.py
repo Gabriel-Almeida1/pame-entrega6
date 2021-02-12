@@ -1,5 +1,5 @@
 from flask import Blueprint
-from .controllers import (ListaProdutos, DeletarProduto, RegistrarProduto, EstoqueProduto, PrecoProduto)
+from .controllers import (ListaProdutos, DeletarProduto, RegistrarProduto, EstoqueProduto, PrecoProduto, SearchBar)
 
 produtos_api = Blueprint('produtos_api', __name__)
 
@@ -36,4 +36,11 @@ produtos_api.add_url_rule(
 '/produtos/preco',
 view_func=PrecoProduto.as_view('preco_produto'),
 methods=['GET']
+)
+
+# Barra de pesquuisa
+produtos_api.add_url_rule(
+'/procurar', 
+view_func=SearchBar.as_view('search_bar'),
+methods=['POST']
 )

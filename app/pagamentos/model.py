@@ -22,5 +22,4 @@ class Pagamentos(db.Model):
             "Nome":self.nome_completo,
             "numero":self.numero_cartao
         }
-
-    # Adicionar mais informações do cartao
+    
